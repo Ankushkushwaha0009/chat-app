@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import userRoutes from "./routes/user.routes.js";
-
 import connectMongoDb from "./db/connectMongoDB.js";
 
 dotenv.config();  // Load environment variables

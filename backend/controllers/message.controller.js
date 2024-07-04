@@ -5,43 +5,38 @@
 
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+
 export const sendMessage = async (req, res) => {
+  // console.log("req.user" , req.user) ; 
   try {
     //we are geeting message as a input
     const { message } = req.body;
     //Then we are getting the user id
     const { id: receiverId } = req.params;
-
     const senderId = req.user._id;
-
     let conversation = await Conversation.findOne({
       //It will give conversation between this two users
-      participants: { $all: [senderId, receiverId] },
+      participants: {$all: [senderId, receiverId]},
     });
-
     //if any conversation is not there between them the create it
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [senderId, receiverId],
       });
     }
-
     //Creating the New Message  ...
     const newMessage = new Message({
       senderId,
       receiverId,
       message,
     });
-
     // put inside the message array
     if (newMessage) {
       conversation.messages.push(newMessage._id);
     }
-
     //SOCKET_IO FUNCTIONALITY WILL GO HERE
     // await conversation.save() ; // if this will take 1 sec to run
     // await newMessage.save() ; // then this will wait for 1 sec to run
-
     // This will run in Parallel
     await Promise.all([conversation.save(), newMessage.save()]); // but here no will await for another process each will run at a same time
     res.status(201).json(newMessage);
@@ -56,7 +51,7 @@ export const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const senderId = req.user._id;
     const conversation = await Conversation.findOne({
-      participants: { $all: [senderId, userToChatId] },
+      participants: { $all: [senderId, userToChatId]},
     }).populate("messages"); // Not referenced but actual messages
     if (!conversation) {
       return res.status(200).json([]);
@@ -68,3 +63,6 @@ export const getMessages = async (req, res) => {
     res.status(500).json({ error: "internal server error" });
   }
 };
+
+
+
