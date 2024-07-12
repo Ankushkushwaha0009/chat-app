@@ -5,6 +5,7 @@
 
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { getRecieverSocketId , io} from "../socket/socket.js";
 
 export const sendMessage = async (req, res) => {
   // console.log("req.user" , req.user) ; 
@@ -34,11 +35,15 @@ export const sendMessage = async (req, res) => {
     if (newMessage) {
       conversation.messages.push(newMessage._id);
     }
-    //SOCKET_IO FUNCTIONALITY WILL GO HERE
-    // await conversation.save() ; // if this will take 1 sec to run
-    // await newMessage.save() ; // then this will wait for 1 sec to run
-    // This will run in Parallel
     await Promise.all([conversation.save(), newMessage.save()]); // but here no will await for another process each will run at a same time
+    //SOCKET_IO FUNCTIONALITY WILL GO HERE
+    
+    const receiverSocketId  =  getRecieverSocketId(receiverId) ; 
+    if(receiverSocketId) {
+      //use to send the eevents to a specific client 
+      io.to(receiverSocketId).emit("newMessage" , newMessage) ;
+    }
+
     res.status(201).json(newMessage);
   } catch (err) {
     console.log("Error is sendMessage controller", err.message);
@@ -58,8 +63,8 @@ export const getMessages = async (req, res) => {
     }
     const messages = conversation.messages;
     res.status(200).json(messages);
-  } catch (err) {
-    console.log("Error is sendMessage controller", err.message);
+  } catch (error) {
+    console.log("Error is sendMessage controller", error.message);
     res.status(500).json({ error: "internal server error" });
   }
 };
