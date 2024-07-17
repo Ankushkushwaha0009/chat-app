@@ -2,29 +2,53 @@ import React from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import useConversation from "../../../zustand/useConversation";
 import { extractTime } from "../../utils/extractTime";
+import { MdDeleteForever } from "react-icons/md";
+import useDeleteMessage from "../../hooks/useDeleteMessage";
 
-const Message = ({ message }) => {
-
+const Message = ({ message, messageId }) => {
+  const { deleteMessage } = useDeleteMessage();
   const { authUser } = useAuthContext();
   const { selectedConversation } = useConversation();
+
   const fromMe = message.senderId === authUser._id;
-  const formatedDate = extractTime(message.createdAt) ; 
-  const chatClassName = fromMe ? "chat-end" : "chat-start";
-  const profilePic = fromMe ? authUser.profilePic : selectedConversation?.profilePic;
-  const bubbleBgColor = fromMe ? 'bg-blue-500'  :  "" ; 
-  const shakeClass =  message.shouldShake ? "shake" : "" ;  
+  const formattedDate = extractTime(message.createdAt);
+  const bubbleBgColor = fromMe ? "bg-blue-500" : "";
+  const chatClassName = fromMe ? "justify-end" : "justify-start";
+  const profilePic = fromMe
+    ? authUser.profilePic
+    : selectedConversation?.profilePic;
+
+  const handleDeleteMessage = () => {
+    deleteMessage(messageId);
+  };
 
   return (
-    <div className={`chat ${chatClassName}`}>
-      <div className="chat-image avatar">
-        <div className="w-10 rounded-full">
-          <img alt="Tailwind Css chat bubble component" src={profilePic} />
+    <div className={`flex items-start ${chatClassName} mb-4`}>
+      {!fromMe && (
+        <div className="flex-shrink-0 mr-3">
+          <img
+            className="h-10 w-10 rounded-full"
+            src={profilePic}
+            alt="Profile"
+          />
+        </div>
+      )}
+      <div className={`flex flex-col max-w-xs mx-2`}>
+        <div
+          className={`relative px-4 py-2 rounded-lg ${bubbleBgColor} text-white`}
+        >
+          <div className="flex justify-between items-center">
+            <div className="text-sm">{message.message}</div>
+            {fromMe && (
+              <MdDeleteForever
+                className="text-red-500 cursor-pointer"
+                onClick={handleDeleteMessage}
+              />
+            )}
+          </div>
+          <div className="text-xs text-gray-400">{formattedDate}</div>
         </div>
       </div>
-      <div className={`chat-bubble  text-white ${bubbleBgColor}  ${shakeClass}  pb-2 `}>
-        {message.message}
-      </div>
-      <div className={`chat-footer opacity-50 text-xs flex gap-1 items-center`}> {formatedDate}</div>
     </div>
   );
 };
